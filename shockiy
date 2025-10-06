@@ -1,83 +1,78 @@
-local RunService = game:GetService("RunService")
-local camera = workspace.CurrentCamera
-local center = camera.ViewportSize / 2
-local angle = 0
-local size = 15
-local armLength = 15
-local thickness = 2
+-- Ссылка на Библиотеку
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/neorik2/roblox-trident/refs/heads/main/trident"))()
+--[[ 
+В данный момент стоит тема "RJTheme3" ,
+вы можете использовать другую тему приведённую ниже -
+"RJTheme1"
+"RJTheme2"
+"RJTheme3"
+"RJTheme4"
+"RJTheme5"
+"RJTheme6"
+"RJTheme7"
+"RJTheme8"
+//////////////////////////////////////////////////////////////////
 
-local lines = {}
-for i = 1, 8 do
-    local line = Drawing.new("Line")
-    line.Thickness = thickness
-    line.Color = Color3.new(1, 1, 1)
-    line.Visible = true
-    lines[i] = line
-end
+Что бы сделать свою тему , уберите часть скрипта из "комминтариев" ,
+который находится чуть ниже , и вместо "RJTheme3" в переменной "Windows" - 
+напишите переменную которая используется в скрипте чуть ниже .
+]]
+--[[
+local colors = {
+	-- Цвет фона у Секций
+    SchemeColor = Color3.fromRGB(150, 72, 148),
+	-- Цвет фона в правой части UI
+	Background = Color3.fromRGB(15,15,15),
+	-- Цвет фона в левой части UI
+    Header = Color3.fromRGB(15,15,15),
+	-- Цвет текста
+    TextColor = Color3.fromRGB(255,255,255),
+	-- Цвет фона у кнопок
+    ElementColor = Color3.fromRGB(20, 20, 20)
+}
+]]
+-- Создать окно UI
+local Window = Library.CreateLib("Name", "RJTheme3")
 
-local function rotate(x, y, a)
-    local cos = math.cos(a)
-    local sin = math.sin(a)
-    return x * cos - y * sin, x * sin + y * cos
-end
+-- Секция
+local Tab = Window:NewTab("TabName")
 
-local function HSVToRGB(h, s, v)
-    local c = v * s
-    local x = c * (1 - math.abs((h * 6) % 2 - 1))
-    local m = v - c
+-- Подсекция
+local Section = Tab:NewSection("Section Name")
 
-    local r, g, b = 0, 0, 0
+-- Заголовок
+Section:NewLabel("LabelText")
 
-    if 0 <= h and h < 1/6 then
-        r, g, b = c, x, 0
-    elseif 1/6 <= h and h < 2/6 then
-        r, g, b = x, c, 0
-    elseif 2/6 <= h and h < 3/6 then
-        r, g, b = 0, c, x
-    elseif 3/6 <= h and h < 4/6 then
-        r, g, b = 0, x, c
-    elseif 4/6 <= h and h < 5/6 then
-        r, g, b = x, 0, c
+-- Кнопка
+Section:NewButton("ButtonText", "ButtonInfo", function()
+    print("Clicked")
+end)
+
+-- Переключатель
+Section:NewToggle("ToggleText", "ToggleInfo", function(state)
+    if state then
+        print("Toggle On")
     else
-        r, g, b = c, 0, x
+        print("Toggle Off")
     end
+end)
 
-    return Color3.new(r + m, g + m, b + m)
-end
+-- Слайдер
+Section:NewSlider("SliderText", "SliderInfo", 500, 0, function(s) -- 500 (Макс. значение) | 0 (Мин. значение)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
 
-RunService.RenderStepped:Connect(function()
-    angle += math.rad(3)
-    local cx, cy = center.X, center.Y
+-- Текст Бокс
+Section:NewTextBox("TextboxText", "TextboxInfo", function(txt)
+	print(txt)
+end)
 
-    local baseLines = {
-        { 3, -size, 5, size },
-        { -size, 5, size, 3 },
-    }
+-- Бинд на клавиши
+Section:NewKeybind("KeybindText", "KeybindInfo", Enum.KeyCode.F, function()
+	print("You just clicked the bind")
+end)
 
-    local armLines = {
-        { 2, -size, armLength, -size },
-        { size, 3, size, armLength },
-        { 2, size, -armLength, size },
-        { -size, 3, -size, -armLength }
-    }
-
-    local hue = (tick() * 0.1) % 1
-    local color = HSVToRGB(hue, 1, 1)
-
-    for i = 1, 2 do
-        local x1, y1 = rotate(baseLines[i][1], baseLines[i][2], angle)
-        local x2, y2 = rotate(baseLines[i][3], baseLines[i][4], angle)
-        lines[i].From = Vector2.new(cx + x1, cy + y1)
-        lines[i].To = Vector2.new(cx + x2, cy + y2)
-        lines[i].Color = color
-    end
-
-    for i = 1, 4 do
-        local index = i + 2
-        local x1, y1 = rotate(armLines[i][1], armLines[i][2], angle)
-        local x2, y2 = rotate(armLines[i][3], armLines[i][4], angle)
-        lines[index].From = Vector2.new(cx + x1, cy + y1)
-        lines[index].To = Vector2.new(cx + x2, cy + y2)
-        lines[index].Color = color
-    end
+-- Дропдаун
+Section:NewDropdown("DropdownText", "DropdownInf", {"Option 1", "Option 2", "Option 3"}, function(currentOption)
+    print(currentOption)
 end)
