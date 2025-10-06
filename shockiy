@@ -1,47 +1,83 @@
-if not game:IsLoaded() then
-	game.Loaded:Wait()
-end;
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+local center = camera.ViewportSize / 2
+local angle = 0
+local size = 15
+local armLength = 15
+local thickness = 2
 
-local statuslist = {};
-statuslist.fallensurvival = {
-	name 		= 'Fallen Survival';
-	status 		= 'Undetected';
-	support 	= {'Zenith'; 'Swift'; 'Wave'; 'Potassium_'; 'Volcano_'; };
-};
-statuslist.tridentsurvival = {
-	name 		= 'Trident Survival';
-	status 		= 'Use at own risk';
-	support 	= {'Wave'; 'AWP'; 'MacSploit'; 'Velocity'; 'Potassium'; 'Seliware'; };
-};
+local lines = {}
+for i = 1, 8 do
+    local line = Drawing.new("Line")
+    line.Thickness = thickness
+    line.Color = Color3.new(1, 1, 1)
+    line.Visible = true
+    lines[i] = line
+end
 
-if (type(loadstring) ~= 'function') then
-	return protectedMessagebox(`missing alias ( loadstring ) - unsupported executor`, `amongus.hook [{executor}]`, 48);
-elseif (type(request) ~= 'function') then
-	return protectedMessagebox(`missing alias ( request ) - unsupported executor`, `amongus.hook [{executor}]`, 48);
-elseif (not Drawing) then
-	protectedLoad('https://raw.githubusercontent.com/mainstreamed/amongus-hook/refs/heads/main/drawingfix.lua');
-end;
-	
-local placeid = game.PlaceId;
-local dir = 'https://raw.githubusercontent.com/mainstreamed/amongus-hook/main/';
+local function rotate(x, y, a)
+    local cos = math.cos(a)
+    local sin = math.sin(a)
+    return x * cos - y * sin, x * sin + y * cos
+end
 
-local load = function(name)
-	local game = statuslist[name];
-	if (game.status ~= 'Undetected' and protectedMessagebox(`{game.name} is Currently Marked as {game.status}!\n\nAre You Sure You Want to Continue?`, `amongus.hook`, 52) ~= 6) then
-		return;
-	elseif (
-		game.support and 
-		not table.find(game.support, executor) and 
-		protectedMessagebox(`Unsupported Executor!\n\n{executor} is not Officially Supported for {game.name}\nand may have Undefined Behaviour or even result in a BAN!\n\nAre You Sure You Want to Continue?`, `amongus.hook [{executor}]`, 52) ~= 6
-	) then
-		return;
-	end;
-	protectedLoad(`{dir}{name}/main.lua`);
-end;
+local function HSVToRGB(h, s, v)
+    local c = v * s
+    local x = c * (1 - math.abs((h * 6) % 2 - 1))
+    local m = v - c
 
-if (placeid == 13253735473) then
-	return load('tridentsurvival');
-elseif (placeid == 13800717766 or placeid == 15479377118 or placeid == 16849012343) then
-    return load('fallensurvival');
-end;
-protectedMessagebox(`This Game is Unsupported!\n\nIf you believe this is incorrect, please open a ticket in our discord! - discord.gg/2jycAcKvdw`, `amongus.hook [{placeid}]`, 48);
+    local r, g, b = 0, 0, 0
+
+    if 0 <= h and h < 1/6 then
+        r, g, b = c, x, 0
+    elseif 1/6 <= h and h < 2/6 then
+        r, g, b = x, c, 0
+    elseif 2/6 <= h and h < 3/6 then
+        r, g, b = 0, c, x
+    elseif 3/6 <= h and h < 4/6 then
+        r, g, b = 0, x, c
+    elseif 4/6 <= h and h < 5/6 then
+        r, g, b = x, 0, c
+    else
+        r, g, b = c, 0, x
+    end
+
+    return Color3.new(r + m, g + m, b + m)
+end
+
+RunService.RenderStepped:Connect(function()
+    angle += math.rad(3)
+    local cx, cy = center.X, center.Y
+
+    local baseLines = {
+        { 3, -size, 5, size },
+        { -size, 5, size, 3 },
+    }
+
+    local armLines = {
+        { 2, -size, armLength, -size },
+        { size, 3, size, armLength },
+        { 2, size, -armLength, size },
+        { -size, 3, -size, -armLength }
+    }
+
+    local hue = (tick() * 0.1) % 1
+    local color = HSVToRGB(hue, 1, 1)
+
+    for i = 1, 2 do
+        local x1, y1 = rotate(baseLines[i][1], baseLines[i][2], angle)
+        local x2, y2 = rotate(baseLines[i][3], baseLines[i][4], angle)
+        lines[i].From = Vector2.new(cx + x1, cy + y1)
+        lines[i].To = Vector2.new(cx + x2, cy + y2)
+        lines[i].Color = color
+    end
+
+    for i = 1, 4 do
+        local index = i + 2
+        local x1, y1 = rotate(armLines[i][1], armLines[i][2], angle)
+        local x2, y2 = rotate(armLines[i][3], armLines[i][4], angle)
+        lines[index].From = Vector2.new(cx + x1, cy + y1)
+        lines[index].To = Vector2.new(cx + x2, cy + y2)
+        lines[index].Color = color
+    end
+end)
